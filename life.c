@@ -1,7 +1,5 @@
 #include "raylib.h"
-#include "raymath.h"
 #include <math.h>
-#include <stdio.h>
 
 int main(void) {
   const int screenWidth = 800;
@@ -9,6 +7,13 @@ int main(void) {
   const int recWidth = 600;
   const int recHeight = 400;
   const int gridSize = 20;
+  int gridWidth = recWidth/gridSize;
+  int gridHeight = recHeight/gridSize;
+
+  int numSquares = gridHeight*gridWidth;
+  bool squares[numSquares];
+  for (int i=0; i<numSquares; i++) squares[i] = false;
+  int tappedSquare = -1;
 
   InitWindow(screenWidth, screenHeight, "Game of Life");
   SetTargetFPS(60);
@@ -25,16 +30,20 @@ int main(void) {
     BeginDrawing();
     ClearBackground(DARKBLUE);
     DrawRectangleLinesEx(gameRec, 2.0f, RAYWHITE);
-    for (int i = 1; i < recWidth/gridSize; i++) {
+    for (int i = 1; i < gridWidth; i++) {
       DrawLine(25+gridSize*i, 25, 25+gridSize*i, 25+recHeight, RAYWHITE);
     }
-    for (int i = 1; i < recHeight/gridSize; i++) {
+    for (int i = 1; i < gridHeight; i++) {
       DrawLine(25, 25+gridSize*i, 25+recWidth, 25+gridSize*i, RAYWHITE);
     }
+    for (int i = 0; i < numSquares; i++) {
+      if (squares[i])
+        DrawRectangleV((Vector2){ 25+gridSize*(i%gridWidth), 25+gridSize*(i/gridWidth) }, (Vector2){ gridSize, gridSize }, RAYWHITE);
+    }
+
     if (CheckCollisionPointRec(touchPosition, gameRec) && currentGesture == GESTURE_TAP) {
-      Vector2 rectanglePos = (Vector2){ 25 + floorf((touchPosition.x - 25)/gridSize)*gridSize, 25 + floorf((touchPosition.y - 25)/gridSize)*gridSize };
-      DrawRectangleV(rectanglePos, (Vector2){ gridSize, gridSize }, RAYWHITE);
-      printf("mouse x: %f, y: %f result x: %f, y: %f\n", touchPosition.x, touchPosition.y, rectanglePos.x, rectanglePos.y);
+      tappedSquare = floorf((touchPosition.x - 25)/gridSize) + floorf((touchPosition.y - 25)/gridSize)*gridWidth;
+      squares[tappedSquare] = !squares[tappedSquare];
     }
     EndDrawing();
   }
