@@ -1,5 +1,36 @@
 #include "raylib.h"
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
 #include <math.h>
+
+void CreateLife(bool squares[], int gridWidth, int gridHeight) {
+  bool newSquares[gridWidth*gridHeight];
+  int sumNeighbors;
+  for (int i=0; i<gridHeight; i++) {
+    for (int j=0; j<gridWidth; j++) {
+      sumNeighbors = 0;
+      if (j>0 && squares[i*gridWidth+(j-1)]) sumNeighbors++;
+      if (j<gridWidth-1 && squares[i*gridWidth+(j+1)]) sumNeighbors++;
+      if (i>0) {
+        if (j>1 && squares[(i-1)*gridWidth+(j-1)]) sumNeighbors++;
+        if (squares[(i-1)*gridWidth+j]) sumNeighbors++;
+        if (j<gridWidth-1 && squares[(i-1)*gridWidth+(j+1)]) sumNeighbors++;
+      }
+      if (i<gridHeight-1) {
+        if (j>0 && squares[(i+1)*gridWidth+(j-1)]) sumNeighbors++;
+        if (squares[(i+1)*gridWidth+j]) sumNeighbors++;
+        if (j<gridWidth-1 && squares[(i+1)*gridWidth+(j+1)]) sumNeighbors++;
+      }
+      if (squares[i*gridWidth+j]) {
+        newSquares[i*gridWidth+j] = sumNeighbors == 2 || sumNeighbors == 3;
+      } else {
+        newSquares[i*gridWidth+j] = sumNeighbors == 3;
+      }
+    }
+  }
+  for (int i=0; i<gridWidth*gridHeight; i++)
+    squares[i] = newSquares[i];
+}
 
 int main(void) {
   const int screenWidth = 800;
@@ -44,6 +75,10 @@ int main(void) {
     if (CheckCollisionPointRec(touchPosition, gameRec) && currentGesture == GESTURE_TAP) {
       tappedSquare = floorf((touchPosition.x - 25)/gridSize) + floorf((touchPosition.y - 25)/gridSize)*gridWidth;
       squares[tappedSquare] = !squares[tappedSquare];
+    }
+
+    if (GuiButton((Rectangle){ 650, 25, 125, 40 }, "#115#Next step")) {
+      CreateLife(squares, gridWidth, gridHeight);
     }
     EndDrawing();
   }
