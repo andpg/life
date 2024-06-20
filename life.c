@@ -1,6 +1,7 @@
-#include "raylib.h"
+#include <raylib.h>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include "style_bluish.h"
 #include <math.h>
 
 void CreateLife(bool squares[], int gridWidth, int gridHeight) {
@@ -33,20 +34,28 @@ void CreateLife(bool squares[], int gridWidth, int gridHeight) {
 }
 
 int main(void) {
-  const int screenWidth = 800;
-  const int screenHeight = 450;
+  const int screenWidth = 650;
+  const int screenHeight = 500;
   const int recWidth = 600;
   const int recHeight = 400;
-  const int gridSize = 20;
-  int gridWidth = recWidth/gridSize;
-  int gridHeight = recHeight/gridSize;
 
-  int numSquares = gridHeight*gridWidth;
+  enum Size {
+    _20x30,
+    _24x16,
+    _15x10,
+    _12x8
+  };
+  int gridSize = 0;
+  int squareSize = 0;
+  int gridWidth = 0;
+  int gridHeight = 0;
+
+  int numSquares = 20*30; // Maximum grid size
   bool squares[numSquares];
   for (int i=0; i<numSquares; i++) squares[i] = false;
-  int tappedSquare = -1;
 
   InitWindow(screenWidth, screenHeight, "Game of Life");
+  GuiLoadStyleBluish();
   SetTargetFPS(60);
 
   Rectangle gameRec = { 25, 25, recWidth, recHeight };
@@ -57,37 +66,50 @@ int main(void) {
   int speed = 4;
   bool speedEdit = false;
   bool running = false;
-  double startTime;
-  int counter;
+  double startTime = 0;
+  int counter = 0;
 
   while (!WindowShouldClose()) {
     currentGesture = GetGestureDetected();
     touchPosition = GetTouchPosition(0);
 
+    switch (gridSize) {
+      case _20x30:
+        squareSize = 20; gridWidth = 30; gridHeight = 20; break;
+      case _24x16:
+        squareSize = 25; gridWidth = 24; gridHeight = 16; break;
+      case _15x10:
+        squareSize = 40; gridWidth = 15; gridHeight = 10; break;
+      case _12x8:
+        squareSize = 50; gridWidth = 12; gridHeight = 8; break;
+    }
+
     BeginDrawing();
-    ClearBackground(DARKBLUE);
-    DrawRectangleLinesEx(gameRec, 2.0f, RAYWHITE);
+    ClearBackground(RAYWHITE);
+    DrawRectangleLinesEx(gameRec, 2.0f, BLACK);
     for (int i = 1; i < gridWidth; i++) {
-      DrawLine(25+gridSize*i, 25, 25+gridSize*i, 25+recHeight, RAYWHITE);
+      DrawLine(25+squareSize*i, 25, 25+squareSize*i, 25+recHeight, BLACK);
     }
     for (int i = 1; i < gridHeight; i++) {
-      DrawLine(25, 25+gridSize*i, 25+recWidth, 25+gridSize*i, RAYWHITE);
+      DrawLine(25, 25+squareSize*i, 25+recWidth, 25+squareSize*i, BLACK);
     }
-    for (int i = 0; i < numSquares; i++) {
+    for (int i = 0; i < gridWidth*gridHeight; i++) {
       if (squares[i])
-        DrawRectangleV((Vector2){ 25+gridSize*(i%gridWidth), 25+gridSize*(i/gridWidth) }, (Vector2){ gridSize, gridSize }, RAYWHITE);
+        DrawRectangleV((Vector2){ 25+squareSize*(i%gridWidth), 25+squareSize*(i/gridWidth) }, (Vector2){ squareSize, squareSize }, BLACK);
     }
 
     if (CheckCollisionPointRec(touchPosition, gameRec) && currentGesture == GESTURE_TAP) {
-      tappedSquare = floorf((touchPosition.x - 25)/gridSize) + floorf((touchPosition.y - 25)/gridSize)*gridWidth;
+      int tappedSquare = floorf((touchPosition.x - 25)/squareSize) + floorf((touchPosition.y - 25)/squareSize)*gridWidth;
       squares[tappedSquare] = !squares[tappedSquare];
     }
 
-    if (GuiButton((Rectangle){ 650, 25, 125, 40 }, "#115#Next step")) {
+    GuiComboBox((Rectangle){ 25, 440, 150, 35 }, "30x20;24x16;15x10;12x8", &gridSize);
+
+    if (GuiButton((Rectangle){ 295, 440, 100, 35 }, "#115#Next step")) {
       CreateLife(squares, gridWidth, gridHeight);
     }
 
-    if(GuiSpinner((Rectangle){ 650, 345, 125, 30 }, NULL, &speed, 1, 6, speedEdit)) {
+    if(GuiSpinner((Rectangle){ 410, 440, 100, 35 }, NULL, &speed, 1, 6, speedEdit)) {
       speedEdit = !speedEdit;
       if (running) {
         counter = 0;
@@ -100,9 +122,9 @@ int main(void) {
         CreateLife(squares, gridWidth, gridHeight);
         counter++;
       }
-      running = !GuiButton((Rectangle){ 650, 385, 125, 40 }, "#132#Pause");
+      running = !GuiButton((Rectangle){ 525, 440, 100, 35 }, "#132#Pause");
     } else {
-      if (GuiButton((Rectangle){ 650, 385, 125, 40 }, "#131#Start")) {
+      if (GuiButton((Rectangle){ 525, 440, 100, 35 }, "#131#Start")) {
         running = true;
         counter = 0;
         startTime = GetTime();
