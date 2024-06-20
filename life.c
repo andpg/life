@@ -12,7 +12,7 @@ void CreateLife(bool squares[], int gridWidth, int gridHeight) {
       if (j>0 && squares[i*gridWidth+(j-1)]) sumNeighbors++;
       if (j<gridWidth-1 && squares[i*gridWidth+(j+1)]) sumNeighbors++;
       if (i>0) {
-        if (j>1 && squares[(i-1)*gridWidth+(j-1)]) sumNeighbors++;
+        if (j>0 && squares[(i-1)*gridWidth+(j-1)]) sumNeighbors++;
         if (squares[(i-1)*gridWidth+j]) sumNeighbors++;
         if (j<gridWidth-1 && squares[(i-1)*gridWidth+(j+1)]) sumNeighbors++;
       }
@@ -54,6 +54,12 @@ int main(void) {
   int currentGesture = GESTURE_NONE;
   Vector2 touchPosition = { 0, 0 };
 
+  int speed = 4;
+  bool speedEdit = false;
+  bool running = false;
+  double startTime;
+  int counter;
+
   while (!WindowShouldClose()) {
     currentGesture = GetGestureDetected();
     touchPosition = GetTouchPosition(0);
@@ -80,6 +86,29 @@ int main(void) {
     if (GuiButton((Rectangle){ 650, 25, 125, 40 }, "#115#Next step")) {
       CreateLife(squares, gridWidth, gridHeight);
     }
+
+    if(GuiSpinner((Rectangle){ 650, 345, 125, 30 }, NULL, &speed, 1, 6, speedEdit)) {
+      speedEdit = !speedEdit;
+      if (running) {
+        counter = 0;
+        startTime = GetTime();
+      }
+    }
+
+    if (running) {
+      if (((int)((GetTime()-startTime)*speed)) >= counter) {
+        CreateLife(squares, gridWidth, gridHeight);
+        counter++;
+      }
+      running = !GuiButton((Rectangle){ 650, 385, 125, 40 }, "#132#Pause");
+    } else {
+      if (GuiButton((Rectangle){ 650, 385, 125, 40 }, "#131#Start")) {
+        running = true;
+        counter = 0;
+        startTime = GetTime();
+      }
+    }
+
     EndDrawing();
   }
 
